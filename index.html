@@ -1,1 +1,140 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Netwerkconfiguratie - Solar Arnhem</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f8f8;
+      margin: 0;
+      padding: 2rem;
+      color: #333;
+    }
+    h1, h2 {
+      color: #005a9c;
+    }
+    pre {
+      background: #eaeaea;
+      padding: 1rem;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    section {
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Netwerkconfiguratie - Solar Arnhem</h1>
 
+  <section>
+    <h2>🔧 1. Core01_ARN (Layer 3 Switch)</h2>
+    <h3>VLAN's en SVI's</h3>
+    <pre>vlan 30
+name Productie
+vlan 40
+name Marketing
+vlan 50
+name Gasten_WIFI
+
+interface vlan 1
+ip address 10.10.0.2 255.255.255.0
+
+interface vlan 30
+ip address 10.10.30.1 255.255.255.0
+
+interface vlan 40
+ip address 10.10.40.1 255.255.255.0
+
+interface vlan 50
+ip address 10.10.50.1 255.255.255.0
+
+ip routing</pre>
+
+    <h3>Trunk & Access</h3>
+    <pre>interface FastEthernet0/1
+switchport mode trunk
+
+interface FastEthernet0/3
+switchport mode trunk
+
+interface FastEthernet0/24
+switchport mode access
+switchport access vlan 50</pre>
+  </section>
+
+  <section>
+    <h2>🔧 2. SW01-ARN</h2>
+    <pre>interface FastEthernet0/1
+switchport mode trunk
+
+interface FastEthernet0/4
+switchport mode access
+switchport access vlan 30
+
+interface FastEthernet0/5
+switchport mode access
+switchport access vlan 30
+
+interface FastEthernet0/24
+switchport mode trunk</pre>
+  </section>
+
+  <section>
+    <h2>🔧 3. SW02-ARN</h2>
+    <pre>interface FastEthernet0/3
+switchport mode trunk
+
+interface FastEthernet0/4
+switchport mode access
+switchport access vlan 40
+
+interface FastEthernet0/23
+switchport mode trunk</pre>
+  </section>
+
+  <section>
+    <h2>🔧 4. Rtr_Inet</h2>
+    <pre>interface GigabitEthernet0/0/1
+ip address 10.10.0.1 255.255.255.0
+
+interface Serial0/1/0
+ip address 185.90.90.1 255.255.255.252
+
+ip route 0.0.0.0 0.0.0.0 185.90.90.2</pre>
+  </section>
+
+  <section>
+    <h2>🔧 5. AP02 (Interne WLAN)</h2>
+    <ul>
+      <li>SSID: <strong>Solar_Arnhem</strong></li>
+      <li>Beveiliging: WPA2-PSK</li>
+      <li>Wachtwoord: <code>solar12345</code></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>🔧 6. AP_Gast</h2>
+    <ul>
+      <li>SSID: <strong>Solar_gast</strong></li>
+      <li>Beveiliging: WPA2-PSK</li>
+      <li>Wachtwoord: <code>welkom123</code></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>🔧 7. Printer0 (Statisch IP in VLAN 40)</h2>
+    <ul>
+      <li>IP: 10.10.40.60</li>
+      <li>Subnet: 255.255.255.0</li>
+      <li>Gateway: 10.10.40.1</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>🔧 8. PC’s en Laptops</h2>
+    <p>Instellen op DHCP via: <strong>Desktop &gt; IP Configuration &gt; DHCP</strong></p>
+  </section>
+</body>
+</html>
