@@ -5,100 +5,74 @@
   <title>Netwerkconfiguratie - Solar Arnhem</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f9fbfc;
-      padding: 2rem;
+      font-family: "Segoe UI", sans-serif;
+      background-color: #f5f7fa;
+      margin: 2rem;
       line-height: 1.6;
+      color: #333;
     }
-    h1, h2, h3 {
-      color: #003366;
+    h1, h2 {
+      color: #1a237e;
+    }
+    h3 {
+      color: #3949ab;
+    }
+    section {
+      margin-bottom: 2rem;
     }
     pre {
-      background-color: #e8f0fe;
+      background-color: #e3f2fd;
       padding: 1rem;
-      border-left: 4px solid #1a73e8;
+      border-left: 4px solid #2196f3;
       overflow-x: auto;
     }
     ul {
       padding-left: 1.5rem;
     }
     code {
-      background-color: #f1f1f1;
+      background-color: #f0f0f0;
       padding: 2px 4px;
       border-radius: 4px;
-    }
-    section {
-      margin-bottom: 2rem;
+      font-family: Consolas, monospace;
     }
   </style>
 </head>
 <body>
 
-  <h1>🔧 Netwerkconfiguratie - Core01_ARN & Switches</h1>
+  <h1>🔧 Netwerkconfiguratie – Solar Arnhem</h1>
 
   <section>
-    <h2>🔧 Core01_ARN – Layer 3 Switch</h2>
-
-    <h3>1. VLAN’s aanmaken</h3>
+    <h2>🖥️ 1. Core01_ARN (VTP Server, DHCP, OSPF, ACL)</h2>
     <pre>
+hostname Core01_ARN
+vtp domain SOLAR
+vtp mode server
+vtp version 2
+
 vlan 30
  name Productie
 vlan 40
  name Marketing
 vlan 50
- name Gasten_Wifi</pre>
+ name Gasten_Wifi
 
-    <h3>2. VTP Configuratie</h3>
-    <pre>
-vtp domain SOLAR
-vtp mode server</pre>
-
-    <h3>3. Spanning Tree Root instellen</h3>
-    <pre>
-spanning-tree vlan 30,40,50 priority 0</pre>
-
-    <h3>4. IP-adressen per VLAN</h3>
-    <pre>
-interface vlan 1
+interface Vlan1
  ip address 10.10.0.2 255.255.255.0
  no shutdown
 
-interface vlan 30
+interface Vlan30
  ip address 10.10.30.1 255.255.255.0
  no shutdown
 
-interface vlan 40
+interface Vlan40
  ip address 10.10.40.1 255.255.255.0
  no shutdown
 
-interface vlan 50
+interface Vlan50
  ip address 10.10.50.1 255.255.255.0
  ip access-group 150 in
- no shutdown</pre>
+ no shutdown
 
-    <h3>5. DHCP Pools instellen</h3>
-    <pre>
-ip dhcp excluded-address 10.10.30.1 10.10.30.50
-ip dhcp excluded-address 10.10.40.1 10.10.40.50
-ip dhcp excluded-address 10.10.50.1 10.10.50.50
-
-ip dhcp pool vlan30
- network 10.10.30.0 255.255.255.0
- default-router 10.10.30.1
- dns-server 62.36.55.85
-
-ip dhcp pool vlan40
- network 10.10.40.0 255.255.255.0
- default-router 10.10.40.1
- dns-server 62.36.55.85
-
-ip dhcp pool vlan50
- network 10.10.50.0 255.255.255.0
- default-router 10.10.50.1
- dns-server 62.36.55.85</pre>
-
-    <h3>6. Trunk- en accesspoorten</h3>
-    <pre>
 interface FastEthernet0/1
  switchport mode trunk
 
@@ -107,99 +81,119 @@ interface FastEthernet0/3
 
 interface FastEthernet0/24
  switchport mode access
- switchport access vlan 50</pre>
+ switchport access vlan 50
 
-    <h3>7. OSPF Configureren</h3>
-    <pre>
-router ospf 1
- network 10.0.0.0 0.255.255.255 area 0</pre>
+spanning-tree vlan 1,30,40,50 priority 0
 
-    <h3>8. ACL voor Gastnetwerk (VLAN 50)</h3>
-    <pre>
+ip dhcp pool VLAN30
+ network 10.10.30.0 255.255.255.0
+ default-router 10.10.30.1
+
+ip dhcp pool VLAN40
+ network 10.10.40.0 255.255.255.0
+ default-router 10.10.40.1
+
+ip dhcp pool VLAN50
+ network 10.10.50.0 255.255.255.0
+ default-router 10.10.50.1
+
 access-list 150 deny ip 10.10.50.0 0.0.0.255 10.10.30.0 0.0.0.255
 access-list 150 deny ip 10.10.50.0 0.0.0.255 10.10.40.0 0.0.0.255
 access-list 150 deny ip 10.10.50.0 0.0.0.255 172.16.10.0 0.0.0.255
 access-list 150 deny ip 10.10.50.0 0.0.0.255 172.16.5.0 0.0.0.255
 access-list 150 deny ip 10.10.50.0 0.0.0.255 172.16.20.0 0.0.0.255
-access-list 150 permit ip any any</pre>
+access-list 150 permit ip any any
+
+router ospf 1
+ network 10.0.0.0 0.255.255.255 area 0
+</pre>
   </section>
 
   <section>
-    <h2>🔧 SW01-ARN & SW02-ARN – Access Switches</h2>
-
-    <h3>1. Hostname instellen</h3>
-    <pre>hostname SW01-ARN   # of SW02-ARN</pre>
-
-    <h3>2. VTP Configuratie (client)</h3>
+    <h2>💡 2. SW01-ARN (VTP Client)</h2>
     <pre>
+hostname SW01-ARN
 vtp domain SOLAR
-vtp mode client</pre>
+vtp mode client
 
-    <h3>3. Poorten instellen voor VLAN’s</h3>
-    <strong>SW01-ARN:</strong>
-    <pre>
+interface FastEthernet0/1
+ switchport mode trunk
+
 interface FastEthernet0/4
  switchport mode access
  switchport access vlan 30
 
 interface FastEthernet0/5
  switchport mode access
- switchport access vlan 30</pre>
+ switchport access vlan 30
 
-    <strong>SW02-ARN:</strong>
+interface FastEthernet0/24
+ switchport mode trunk
+</pre>
+  </section>
+
+  <section>
+    <h2>💡 3. SW02-ARN (VTP Client)</h2>
     <pre>
+hostname SW02-ARN
+vtp domain SOLAR
+vtp mode client
+
+interface FastEthernet0/3
+ switchport mode trunk
+
 interface FastEthernet0/4
  switchport mode access
  switchport access vlan 40
 
-interface GigabitEthernet0/1
- switchport mode access
- switchport access vlan 40</pre>
-
-    <h3>4. Trunk-links</h3>
-    <pre>
 interface FastEthernet0/23
  switchport mode trunk
-
-interface FastEthernet0/24
- switchport mode trunk</pre>
+</pre>
   </section>
 
   <section>
-    <h2>📶 Access Point - AP02</h2>
+    <h2>📶 4. AP02 (SSID: Solar_Arnhem)</h2>
     <ul>
-      <li>SSID: <strong>Solar_Arnhem</strong></li>
-      <li>Beveiliging: WPA2-PSK</li>
-      <li>Wachtwoord: <code>solar12345</code></li>
-      <li>Poort in VLAN 40</li>
+      <li><strong>SSID:</strong> Solar_Arnhem</li>
+      <li><strong>Beveiliging:</strong> WPA2-PSK</li>
+      <li><strong>Wachtwoord:</strong> <code>solar12345</code></li>
+      <li><strong>Wireless VLAN:</strong> 40</li>
     </ul>
   </section>
 
   <section>
-    <h2>🖨️ Printer0 (VLAN 40)</h2>
+    <h2>📶 5. AP_Gast (SSID: Solar_gast)</h2>
     <ul>
-      <li>IP: <code>10.10.40.60</code></li>
-      <li>Subnet: <code>255.255.255.0</code></li>
-      <li>Gateway: <code>10.10.40.1</code></li>
-      <li>Handmatig instellen via Config > FastEthernet</li>
+      <li><strong>SSID:</strong> Solar_gast</li>
+      <li><strong>Beveiliging:</strong> WPA2-PSK</li>
+      <li><strong>Wachtwoord:</strong> <code>welkom123</code></li>
+      <li><strong>Wireless VLAN:</strong> 50</li>
     </ul>
   </section>
 
   <section>
-    <h2>💻 PC's & Laptops (Productie/Marketing)</h2>
+    <h2>🖨️ 6. Printer0 (Statisch IP - VLAN 40)</h2>
     <ul>
-      <li>Sluit aan op juiste VLAN (30 of 40)</li>
-      <li>IP-instellingen op <strong>DHCP</strong> zetten</li>
+      <li><strong>IP Address:</strong> 10.10.40.60</li>
+      <li><strong>Subnet:</strong> 255.255.255.0</li>
+      <li><strong>Default Gateway:</strong> 10.10.40.1</li>
+      <li><strong>VLAN:</strong> 40</li>
+      <li><strong>Instellen via:</strong> <code>Config > FastEthernet</code></li>
     </ul>
   </section>
 
   <section>
-    <h2>📡 Gast-WiFi (VLAN 50)</h2>
+    <h2>💻 7. PC’s & Laptops (via DHCP)</h2>
     <ul>
-      <li>SSID: <strong>Solar_gast</strong></li>
-      <li>WPA2-PSK, wachtwoord: <code>welkom123</code></li>
-      <li>Aangesloten op VLAN 50 (zoals poort Fa0/24)</li>
-      <li>Beveiligd via ACL op Core01_ARN (zie boven)</li>
+      <li>Sluit PC's aan op VLAN 30 (Productie) of VLAN 40 (Marketing).</li>
+      <li>Zorg dat DHCP is ingeschakeld op het besturingssysteem.</li>
+      <li>Controleer IP-adres met: <code>ipconfig</code> (Windows) of <code>ifconfig/ip a</code> (Linux/macOS).</li>
+      <li>Verwacht bereik:
+        <ul>
+          <li>VLAN 30: <code>10.10.30.x</code></li>
+          <li>VLAN 40: <code>10.10.40.x</code></li>
+        </ul>
+      </li>
     </ul>
   </section>
 
